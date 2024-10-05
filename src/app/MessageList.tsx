@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { pusherClient } from "~/libs/client";
-import { PusherMessage, sendPusherMessage } from "./serverActions/pusherAction";
+import { PusherMessage, sendPusherMessage } from "../serverActions/pusherAction";
 
 
 export default function MessageList() {

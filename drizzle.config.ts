@@ -1,12 +1,17 @@
 import { type Config } from "drizzle-kit";
+import { env } from "process";
 
-import { env } from "~/env";
+const databaseUrl = env.DATABASE_URL;
 
-// export default {
-//   schema: "./src/server/db/schema.ts",
-//   dialect: "postgresql",
-//   dbCredentials: {
-//     url: env.DATABASE_URL,
-//   },
-//   tablesFilter: ["corpo-wheel_*"],
-// } satisfies Config;
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is not defined");
+}
+
+export default {
+  schema: "./src/db/schema.ts",
+  dialect: "postgresql",
+  dbCredentials: {
+    url: databaseUrl,
+  },
+  tablesFilter: ["corpo-wheel_*"],
+} satisfies Config;
