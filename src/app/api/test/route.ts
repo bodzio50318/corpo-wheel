@@ -16,9 +16,9 @@ export async function POST(req: Request, res: Response) {
             message
         )
 
-        return NextResponse.json({ message: "Sockets tested" }, { status: 200 })
+        return NextResponse.json({ message: "Sockets tested!" }, { status: 200 })
     } catch (error) {
         console.error(error)
-        return NextResponse.json({ message: "Failed to test sockets", error: error }, { status: 500 })
+        return NextResponse.json({ message: "Failed to test sockets!", error: error }, { status: 500 })
     }
 }
