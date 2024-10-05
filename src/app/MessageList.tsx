@@ -4,24 +4,20 @@
 import { useEffect, useState } from "react";
 import { pusherClient } from "~/libs/client";
 
-interface MessageListProps {
-
-}
-
 export interface PusherMessage {
     message: string;
     user: string;
     // Add other properties as needed
 }
 
-export default function MessageList({ }: MessageListProps) {
+export default function MessageList() {
 
     const [messages, setMessages] = useState<PusherMessage[]>([]);
 
     useEffect(() => {
         const channel = pusherClient
             .subscribe('private-chat')
-            .bind("evt::test", (data: any) => {
+            .bind("evt::test", (data: PusherMessage) => {
                 console.log("test", data)
                 setMessages([...messages, data])
             });
@@ -32,16 +28,13 @@ export default function MessageList({ }: MessageListProps) {
     }, [messages]);
 
     const handleTestClick = async () => {
-        let data = await fetch('/api/test', {
+        const data = await fetch('/api/test', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ message: 'test' })
         })
-        let json = await data.json()
-        console.log(json)
-
     }
 
     return (
@@ -53,10 +46,11 @@ export default function MessageList({ }: MessageListProps) {
             </button>
 
             <div>
-                {messages.map((message: any) => (
+                {messages.map((message: PusherMessage) => (
                     <div
+                        key={1}
                         className="border border-slate-600 rounded p-2 m-2"
-                        key={message.date}>
+                    >
                         {message.message}
                         <br />
                     </div>
