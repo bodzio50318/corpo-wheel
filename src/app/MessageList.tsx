@@ -1,14 +1,9 @@
-// src/components/MessageList.tsx
 'use client';
 
 import { useEffect, useState } from "react";
 import { pusherClient } from "~/libs/client";
+import { PusherMessage, sendPusherMessage } from "./serverActions/pusherAction";
 
-export interface PusherMessage {
-    message: string;
-    user: string;
-    // Add other properties as needed
-}
 
 export default function MessageList() {
 
@@ -28,13 +23,7 @@ export default function MessageList() {
     }, [messages]);
 
     const handleTestClick = async () => {
-        const data = await fetch('/api/test', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ message: 'test' })
-        })
+        await sendPusherMessage();
     }
 
     return (
