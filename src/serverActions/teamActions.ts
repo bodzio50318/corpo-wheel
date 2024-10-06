@@ -8,10 +8,14 @@ export async function createRoomAction(param: FormData) {
 
     console.log(`Trying to acces a team named: ${teamName}`)
     
-    const team = await selectTeamByName(teamName) 
+    let team = await selectTeamByName(teamName) 
     
-    console.log(`Team id: ${team?.id}`)
+    if (team?.id == null) {
+        console.log(`Team not found, creating a new team: ${teamName}`);
+        team=await createTeam(teamName);
+        console.log(`New team id: ${team.id}`);
 
-    //createTeam(teamName)
-    
+    } else {
+        console.log(`Team id: ${team.id}`);
+    }
 }
