@@ -2,17 +2,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
-import { User } from '~/db/schema';
+import type { User } from '~/db/schema';
 import { pusherClient } from '~/libs/client';
-import { sendWinnderSelectedMsg, WinnerSelectedPusherMessage } from '~/serverActions/pusherAction';
+import { sendWinnderSelectedMsg, type WinnerSelectedPusherMessage } from '~/serverActions/pusherAction';
 
 const NEW_WINER_TOPIC = "new-winner-";
 
 interface WheelOfFortuneProps {
     teamId: number;
     users: User[];
-    //addCurrent user to context so we can ignore pusher event for the current user
-    //myUserId: number;
+    myUserId: number;
 }
 
 const COLORS = [
@@ -23,7 +22,7 @@ const COLORS = [
     '#FF6347', '#4682B4'
 ];
 
-export default function WheelOfFortune({ teamId, users }: WheelOfFortuneProps) {
+export default function WheelOfFortune({ teamId, users, myUserId }: WheelOfFortuneProps) {
     const [rotation, setRotation] = useState(0);
     const [isSpinning, setIsSpinning] = useState(false);
     const [winner, setWinner] = useState<User | null>(null);
@@ -38,7 +37,7 @@ export default function WheelOfFortune({ teamId, users }: WheelOfFortuneProps) {
 
     //Handle click on spin button
     const clickSpinnButton = async () => {
-        if (isSpinning || users.length < 2 ) return;
+        if (isSpinning || users.length < 2) return;
 
         setRotation(0);
 
@@ -56,7 +55,7 @@ export default function WheelOfFortune({ teamId, users }: WheelOfFortuneProps) {
             }
         }
         setWinner(winningSlice);
-        await sendWinnderSelectedMsg(winningSlice!.id, teamId)
+        await sendWinnderSelectedMsg(winningSlice!.id, myUserId, teamId)
 
     };
 
@@ -104,15 +103,19 @@ export default function WheelOfFortune({ teamId, users }: WheelOfFortuneProps) {
             .subscribe(chanelName)
             .bind("evt::test", (data: WinnerSelectedPusherMessage) => {
                 console.log("Got pusher event", data)
-                const winnerId = data.winnerId
-                const winner = users.find(item => item.id === winnerId);
-                setWinner(winner!);
+                if (data.myUserId != myUserId) {
+                    ;
+                    console.log("Setting winner from pusher event")
+                    const winnerId = data.winnerId
+                    const winner = users.find(item => item.id === winnerId);
+                    setWinner(winner!);
+                }
             });
 
         return () => {
             channel.unbind();
         };
-    }, []);
+    },);
 
 
     const easeOutCubic = (t: number): number => {
@@ -137,7 +140,7 @@ export default function WheelOfFortune({ teamId, users }: WheelOfFortuneProps) {
                     <svg viewBox="0 0 100 100" className="w-full h-full">
                         <g ref={wheelRef} transform={`rotate(${rotation - firstItemAngle} 50 50)`}>
                             {users.map((item, index) => {
-                                const sliceAngle = (item.chance / totalChance) * 360;
+                                const sliceAngle = users.length === 1 ? 360 : (item.chance / totalChance) * 360;
                                 const startAngle = users.slice(0, index).reduce((sum, i) => sum + (i.chance / totalChance) * 360, 0);
                                 const midAngle = startAngle + sliceAngle / 2;
                                 const endAngle = startAngle + sliceAngle;

@@ -1,10 +1,15 @@
 "use server"
 import { db } from "..";
-import { Team, team } from "../schema";
+import { type Team, team } from "../schema";
 import { eq } from 'drizzle-orm';
 
 export async function selectTeamByName(teamName: string): Promise<Team | undefined> {
     const result = await db.select().from(team).where(eq(team.name, teamName));
+    return result[0];
+}
+
+export async function selectTeamById(teamId: number): Promise<Team | undefined> {
+    const result = await db.select().from(team).where(eq(team.id, teamId));
     return result[0];
 }
 

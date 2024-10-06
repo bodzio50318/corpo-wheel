@@ -1,7 +1,4 @@
-// Example model schema from the Drizzle docs
-// https://orm.drizzle.team/docs/sql-schema-declaration
-
-import { InferModel, InferSelectModel, sql } from "drizzle-orm";
+import { sql, type InferSelectModel } from "drizzle-orm";
 import {
   index,
   integer,
