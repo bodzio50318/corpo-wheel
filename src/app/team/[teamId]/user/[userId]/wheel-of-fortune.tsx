@@ -39,10 +39,10 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
     //Handle click on spin button
     const clickSpinnButton = async () => {
         if (isSpinning || users.length < 2) return;
-
-        setRotation(0);
-
+        
+        
         console.log(`Ranomizing winner`)
+
 
         const randomValue = Math.random() * totalChance;
         let accumulatedChance = 0;
@@ -55,15 +55,16 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
                 break;
             }
         }
-        setWinner(winningSlice);
+        setWinner(null)
+        setTimeout(() => {
+            setWinner(winningSlice);
+        }, 0);
         await sendWinnderSelectedMsg(winningSlice!.id, myUser, teamId)
     };
 
     //Triger on winner change
     useEffect(() => {
         if (!winner) return;
-
-        setIsSpinning(true);
 
         const spinDuration = 2000;
         const spinRevolutions = 2;
@@ -80,6 +81,7 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
 
         const startTime = performance.now();
         const animate = (time: number) => {
+            setIsSpinning(true);
             const elapsed = time - startTime;
             const progress = Math.min(elapsed / spinDuration, 1);
             const easeProgress = easeOutCubic(progress);
