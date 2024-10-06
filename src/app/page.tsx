@@ -1,4 +1,3 @@
-import MessageList from "./MessageList";
 import WelcomeScreen from "./welcome-screen";
 
 export default function HomePage() {

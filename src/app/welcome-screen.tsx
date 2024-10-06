@@ -9,6 +9,7 @@ import { createRoomAction } from '../serverActions/teamActions'
 
 export default function WelcomeScreen() {
     const [teamName, setTeamName] = useState('')
+    const [userName, setUserName] = useState('')
     const [password, setPassword] = useState('')
 
 
@@ -31,6 +32,17 @@ export default function WelcomeScreen() {
                                 placeholder="Enter your team name"
                                 value={teamName}
                                 onChange={(e) => setTeamName(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="userName">User Name</Label>
+                            <Input
+                                id="userName"
+                                name="userName"
+                                placeholder="Enter your user name"
+                                value={userName}
+                                onChange={(e) => setUserName(e.target.value)}
                                 required
                             />
                         </div>

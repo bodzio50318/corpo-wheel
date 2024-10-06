@@ -2,20 +2,19 @@
 
 import { getPusherInstance } from "~/libs/sever";
 
-export interface PusherMessage {
-    message: string;
-    user: string;
-    // Add other properties as needed
+
+export interface WinnerSelectedPusherMessage {
+    winnerId: number;
 }
 const pusherServer = getPusherInstance();
 
-export async function sendPusherMessage() {
-    const message: PusherMessage = {
-        message: "test",
-        user: "ree",
+export async function sendWinnderSelectedMsg(winnerId: number, teamId: number) {
+    const NEW_WINER_TOPIC = "new-winner-";
+    const message: WinnerSelectedPusherMessage = {
+        winnerId: winnerId,
     };
     await pusherServer.trigger(
-        'private-chat',
+        NEW_WINER_TOPIC + teamId,
         "evt::test",
         message
     )

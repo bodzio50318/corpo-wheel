@@ -1,4 +1,4 @@
-
+"use server"
 import { db } from "..";
 import { Team, team } from "../schema";
 import { eq } from 'drizzle-orm';

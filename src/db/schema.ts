@@ -4,6 +4,7 @@
 import { InferModel, InferSelectModel, sql } from "drizzle-orm";
 import {
   index,
+  integer,
   pgTableCreator,
   serial,
   timestamp,
@@ -35,6 +36,30 @@ export const team = createTable(
   })
 );
 
+
+export const user = createTable(
+  "user",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 256 }).notNull(),
+    chance: integer("chance").default(10).notNull(),
+    teamId: integer("team_id")
+      .references(() => team.id)
+      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+      () => new Date()
+    ),
+  },
+  (example) => ({
+    nameIndex: index("user_name_idx").on(example.name),
+  })
+);
+
 // Infer the type for a team
 export type Team = InferSelectModel<typeof team>;
 
+// Infer the type for a user
+export type User = InferSelectModel<typeof user>;

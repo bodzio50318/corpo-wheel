@@ -2,15 +2,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import { User } from '~/db/schema';
+import { pusherClient } from '~/libs/client';
+import { sendWinnderSelectedMsg, WinnerSelectedPusherMessage } from '~/serverActions/pusherAction';
 
-interface WheelItem {
-    id: string;
-    name: string;
-    chance: number;
-}
+const NEW_WINER_TOPIC = "new-winner-";
 
 interface WheelOfFortuneProps {
-    items: WheelItem[];
+    teamId: number;
+    users: User[];
+    //addCurrent user to context so we can ignore pusher event for the current user
+    //myUserId: number;
 }
 
 const COLORS = [
@@ -21,56 +23,61 @@ const COLORS = [
     '#FF6347', '#4682B4'
 ];
 
-export default function WheelOfFortune({ items }: WheelOfFortuneProps) {
+export default function WheelOfFortune({ teamId, users }: WheelOfFortuneProps) {
     const [rotation, setRotation] = useState(0);
     const [isSpinning, setIsSpinning] = useState(false);
-    const [winner, setWinner] = useState<WheelItem | null>(null);
+    const [winner, setWinner] = useState<User | null>(null);
     const wheelRef = useRef<SVGGElement>(null);
     const requestRef = useRef<number | null>(null);
 
-    const totalChance = items.reduce((sum, item) => sum + item.chance, 0);
+    const chanelName = NEW_WINER_TOPIC + teamId
 
-    // Calculate the initial rotation to align the first item at the top
-    const firstItemAngle = 88+ (items[0]!.chance / totalChance) * 360 / 2;
-    // console.log(`First item angle ${firstItemAngle}`)
+    const totalChance = users.reduce((sum, item) => sum + item.chance, 0);
 
+    const firstItemAngle = 88 + (users[0]!.chance / totalChance) * 360 / 2;
 
-    const spin = () => {
-        if (isSpinning || items.length === 0) return;
+    //Handle click on spin button
+    const clickSpinnButton = async () => {
+        if (isSpinning || users.length < 2 ) return;
 
-        setIsSpinning(true);
-        setWinner(null);
         setRotation(0);
 
-        // Randomly select an item based on the chances
+        console.log(`Ranomizing winner`)
+
         const randomValue = Math.random() * totalChance;
         let accumulatedChance = 0;
-        let winningSlice: WheelItem | null = null;
+        let winningSlice: User | null = null;
 
-        for (const item of items) {
+        for (const item of users) {
             accumulatedChance += item.chance;
             if (randomValue < accumulatedChance) {
                 winningSlice = item;
                 break;
             }
         }
-        
-        console.log(`Winnig slice id ${winningSlice?.id}`)
+        setWinner(winningSlice);
+        await sendWinnderSelectedMsg(winningSlice!.id, teamId)
 
-        const spinDuration = 2000; // 5 seconds
-        const spinRevolutions = 2; // Number of full rotations
-        const startRotation = 0; // Start from 0
-       
+    };
 
-        const sliceAngle = (winningSlice!.chance / totalChance) * 360;
-        const startAngle = items.slice(0, items.indexOf(winningSlice!)).reduce((sum, i) => sum + (i.chance / totalChance) * 360, 0);
+    //Triger on winner change
+    useEffect(() => {
+        if (!winner) return;
+
+        setIsSpinning(true);
+
+        const spinDuration = 2000;
+        const spinRevolutions = 2;
+        const startRotation = 0;
+
+        const sliceAngle = (winner.chance / totalChance) * 360;
+        const startAngle = users.slice(0, users.indexOf(winner)).reduce((sum, i) => sum + (i.chance / totalChance) * 360, 0);
         const midAngle = startAngle + sliceAngle / 2;
 
-        // Calculate the extra spin to ensure the winning slice ends at the top
         const extraSpinAngle = 360 - midAngle;
         const totalSpinAngle = spinRevolutions * 360 + extraSpinAngle;
 
-        const finalRotation = totalSpinAngle; // Adjust to center the winning slice
+        const finalRotation = totalSpinAngle;
 
         const startTime = performance.now();
         const animate = (time: number) => {
@@ -85,11 +92,31 @@ export default function WheelOfFortune({ items }: WheelOfFortuneProps) {
                 requestRef.current = requestAnimationFrame(animate);
             } else {
                 setIsSpinning(false);
-                setWinner(winningSlice);
             }
         };
 
         requestRef.current = requestAnimationFrame(animate);
+
+    }, [winner]);
+
+    useEffect(() => {
+        const channel = pusherClient
+            .subscribe(chanelName)
+            .bind("evt::test", (data: WinnerSelectedPusherMessage) => {
+                console.log("Got pusher event", data)
+                const winnerId = data.winnerId
+                const winner = users.find(item => item.id === winnerId);
+                setWinner(winner!);
+            });
+
+        return () => {
+            channel.unbind();
+        };
+    }, []);
+
+
+    const easeOutCubic = (t: number): number => {
+        return 1 - Math.pow(1 - t, 3);
     };
 
     useEffect(() => {
@@ -100,22 +127,18 @@ export default function WheelOfFortune({ items }: WheelOfFortuneProps) {
         };
     }, []);
 
-    const easeOutCubic = (t: number): number => {
-        return 1 - Math.pow(1 - t, 3);
-    };
-
     return (
         <Card className="w-full max-w-md mx-auto">
             <CardHeader>
-                <CardTitle className="text-2xl font-bold text-center">Wheel of Fortune</CardTitle>
+                <CardTitle className="text-2xl font-bold text-center">Wheel of Corpo</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col items-center">
                 <div className="relative w-72 h-72 mb-4">
                     <svg viewBox="0 0 100 100" className="w-full h-full">
                         <g ref={wheelRef} transform={`rotate(${rotation - firstItemAngle} 50 50)`}>
-                            {items.map((item, index) => {
+                            {users.map((item, index) => {
                                 const sliceAngle = (item.chance / totalChance) * 360;
-                                const startAngle = items.slice(0, index).reduce((sum, i) => sum + (i.chance / totalChance) * 360, 0);
+                                const startAngle = users.slice(0, index).reduce((sum, i) => sum + (i.chance / totalChance) * 360, 0);
                                 const midAngle = startAngle + sliceAngle / 2;
                                 const endAngle = startAngle + sliceAngle;
                                 const largeArcFlag = sliceAngle > 180 ? 1 : 0;
@@ -158,7 +181,7 @@ export default function WheelOfFortune({ items }: WheelOfFortuneProps) {
                         <path d="M 50 0 L 55 10 L 45 10 Z" fill="black" />
                     </svg>
                 </div>
-                <Button onClick={spin} disabled={isSpinning}>
+                <Button onClick={clickSpinnButton} disabled={isSpinning}>
                     {isSpinning ? 'Spinning...' : 'Spin the Wheel'}
                 </Button>
                 {winner && (
