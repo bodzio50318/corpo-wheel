@@ -13,7 +13,7 @@ export default function WelcomeScreen() {
 
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-purple-100">
+        <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-purple-100 overflow-hidden">
             <Card className="w-full max-w-md">
                 <CardHeader>
                     <CardTitle className="text-2xl font-bold text-center">Welcome!</CardTitle>
