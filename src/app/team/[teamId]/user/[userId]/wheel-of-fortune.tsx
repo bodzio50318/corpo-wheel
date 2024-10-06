@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import type { User } from '~/db/schema';
@@ -11,7 +12,7 @@ const NEW_WINER_TOPIC = "new-winner-";
 interface WheelOfFortuneProps {
     teamId: number;
     users: User[];
-    myUserId: number;
+    myUser: User;
 }
 
 const COLORS = [
@@ -22,7 +23,7 @@ const COLORS = [
     '#FF6347', '#4682B4'
 ];
 
-export default function WheelOfFortune({ teamId, users, myUserId }: WheelOfFortuneProps) {
+export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortuneProps) {
     const [rotation, setRotation] = useState(0);
     const [isSpinning, setIsSpinning] = useState(false);
     const [winner, setWinner] = useState<User | null>(null);
@@ -55,8 +56,7 @@ export default function WheelOfFortune({ teamId, users, myUserId }: WheelOfFortu
             }
         }
         setWinner(winningSlice);
-        await sendWinnderSelectedMsg(winningSlice!.id, myUserId, teamId)
-
+        await sendWinnderSelectedMsg(winningSlice!.id, myUser, teamId)
     };
 
     //Triger on winner change
@@ -103,9 +103,8 @@ export default function WheelOfFortune({ teamId, users, myUserId }: WheelOfFortu
             .subscribe(chanelName)
             .bind("evt::test", (data: WinnerSelectedPusherMessage) => {
                 console.log("Got pusher event", data)
-                if (data.myUserId != myUserId) {
-                    ;
-                    console.log("Setting winner from pusher event")
+                if (data.messageCreator.id != myUser.id) {
+                    toast(`Spin started by ${data.messageCreator.name}`)
                     const winnerId = data.winnerId
                     const winner = users.find(item => item.id === winnerId);
                     setWinner(winner!);

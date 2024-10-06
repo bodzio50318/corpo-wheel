@@ -20,3 +20,8 @@ export async function getUserByIdAndTeamId(userName: string, teamId: number): Pr
     const result = await db.select().from(user).where(and(eq(user.name, userName), eq(user.teamId, teamId)));
     return result[0];
 }
+
+export async function getUserById(userId: number): Promise<User | undefined> {
+    const result = await db.select().from(user).where(eq(user.id, userId));
+    return result[0];
+}

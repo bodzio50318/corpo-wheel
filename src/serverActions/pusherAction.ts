@@ -1,19 +1,20 @@
 "use server"
 
+import { User } from "~/db/schema";
 import { getPusherInstance } from "~/libs/sever";
 
 
 export interface WinnerSelectedPusherMessage {
     winnerId: number;
-    myUserId: number;
+    messageCreator: User;
 }
 const pusherServer = getPusherInstance();
 
-export async function sendWinnderSelectedMsg(winnerId: number, myUserId: number, teamId: number) {
+export async function sendWinnderSelectedMsg(winnerId: number, messageCreator: User, teamId: number) {
     const NEW_WINER_TOPIC = "new-winner-";
     const message: WinnerSelectedPusherMessage = {
         winnerId: winnerId,
-        myUserId: myUserId
+        messageCreator: messageCreator
     };
     await pusherServer.trigger(
         NEW_WINER_TOPIC + teamId,
