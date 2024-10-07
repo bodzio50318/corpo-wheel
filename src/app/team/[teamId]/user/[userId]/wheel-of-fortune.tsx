@@ -1,11 +1,12 @@
 "use client"
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import type { User } from '~/db/schema';
 import { pusherClient } from '~/libs/client';
-import { type WinnerSelectedPusherMessage } from '~/serverActions/pusherAction';
+import { NewUserJoinedPusherMessage, sendNewUserJoinedMsg, type WinnerSelectedPusherMessage } from '~/serverActions/pusherAction';
 import { generateWinner } from '~/serverActions/wheelActions';
 
 const NEW_WINER_TOPIC = "new-winner-";
@@ -25,6 +26,7 @@ const COLORS = [
 ];
 
 export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortuneProps) {
+    const router = useRouter();
     const [rotation, setRotation] = useState(0);
     const [isSpinning, setIsSpinning] = useState(false);
     const [winner, setWinner] = useState<User | null>(null);
@@ -102,6 +104,32 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
         };
     },);
 
+    const newUserJoinedTopic = `new-user-joined-team-${teamId}`;
+
+    const [localUsers, setLocalUsers] = useState(users);
+
+    useEffect(() => {
+        const sendMessage = async () => {
+            await sendNewUserJoinedMsg(teamId, myUser);
+        };
+        sendMessage();
+    }, []);
+
+    useEffect(() => {
+        const channel = pusherClient
+            .subscribe(newUserJoinedTopic)
+            .bind("evt::test", (data: NewUserJoinedPusherMessage) => {
+                console.log("Got new user joined event", data)
+                if (data.user.id !== myUser.id) {
+                    toast(`New user joined: ${data.user.name}`);
+                    router.refresh();
+                }                       
+            });
+
+        return () => {
+            pusherClient.unsubscribe(newUserJoinedTopic);
+        };
+    }, [newUserJoinedTopic, myUser.id]);
 
     const easeOutCubic = (t: number): number => {
         return 1 - Math.pow(1 - t, 3);
