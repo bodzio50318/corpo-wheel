@@ -1,6 +1,6 @@
 "use server"
 
-import { User } from "~/db/schema";
+import {type User } from "~/db/schema";
 import { getPusherInstance } from "~/libs/sever";
 
 
