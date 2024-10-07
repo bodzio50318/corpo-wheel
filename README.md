@@ -3,8 +3,8 @@
 
 ##TO DO
 
-Event when someone joined troggers 2 fix
+Event when someone joined triggers twice fix
 Separate local from prod
-not stop in the middll
+not stop in the middlle
 use env in pusher
-not duplicate ttopic const
+not duplicate topic const

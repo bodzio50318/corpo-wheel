@@ -44,7 +44,18 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
         const newUserJoinedChannel = pusherClient.subscribe(NEW_USER_JOINED_TOPIC);
 
 
-         sendNewUserJoinedMsg(teamId, myUser);
+        const sendMessage = async () => {
+            try {
+                await sendNewUserJoinedMsg(teamId, myUser);
+            } catch (error) {
+                console.error("Failed to send new user joined message:", error);
+                toast.error("Failed to notify others about joining");
+            }
+        };
+    
+        // Use void operator to explicitly ignore the promise
+        void sendMessage();
+        
         // Handle new winner event
         newWinnerChannel.bind("evt::test", (data: WinnerSelectedPusherMessage) => {
             console.log("Got pusher event", data);
