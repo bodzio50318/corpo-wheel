@@ -110,10 +110,15 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
 
     useEffect(() => {
         const sendMessage = async () => {
-            await sendNewUserJoinedMsg(teamId, myUser);
+            try {
+                await sendNewUserJoinedMsg(teamId, myUser);
+            } catch (error) {
+                console.error("Failed to send new user joined message:", error);
+                toast.error("Failed to notify others about joining");
+            }
         };
-        sendMessage();
-    }, []);
+        void sendMessage();
+    }, [teamId, myUser]);
 
     useEffect(() => {
         const channel = pusherClient
