@@ -32,15 +32,53 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
     const [winner, setWinner] = useState<User | null>(null);
     const wheelRef = useRef<SVGGElement>(null);
     const requestRef = useRef<number | null>(null);
-    const [finalRotation, setFinalRotation] = useState(0);
-
-    const chanelName = NEW_WINER_TOPIC + teamId
 
     const totalChance = users.reduce((sum, item) => sum + item.chance, 0);
 
+    const NEW_WINNER_TOPIC = `new-winner-${teamId}`;
+    const NEW_USER_JOINED_TOPIC = `new-user-joined-team-${teamId}`;
+
+    useEffect(() => {
+        // Subscribe to Pusher channels
+        const newWinnerChannel = pusherClient.subscribe(NEW_WINNER_TOPIC);
+        const newUserJoinedChannel = pusherClient.subscribe(NEW_USER_JOINED_TOPIC);
+
+
+         sendNewUserJoinedMsg(teamId, myUser);
+        // Handle new winner event
+        newWinnerChannel.bind("evt::test", (data: WinnerSelectedPusherMessage) => {
+            console.log("Got pusher event", data);
+            if (data.messageCreator.id !== myUser.id) {
+                toast(`Spin started by ${data.messageCreator.name}`);
+                const winnerId = data.winnerId;
+                const winner = users.find(item => item.id === winnerId);
+                if (winner) {
+                    setWinner(winner);
+                    setIsSpinning(true);
+                }
+            }
+        });
+
+        // Handle new user joined event
+        newUserJoinedChannel.bind("evt::test", (data: NewUserJoinedPusherMessage) => {
+            console.log("Got new user joined event", data);
+            if (data.user.id !== myUser.id) {
+                toast(`New user joined: ${data.user.name}`);
+                // Optionally refresh the page or update the users list
+                router.refresh();
+            }
+        });
+
+        // Cleanup function
+        return () => {
+            pusherClient.unsubscribe(NEW_WINNER_TOPIC);
+            pusherClient.unsubscribe(NEW_USER_JOINED_TOPIC);
+        };
+    }, []); // Empty dependency array ensures this runs only once on mount
+
     //Trigger on winner change
     useEffect(() => {
-        if (!winner) return;
+        if (!winner || !isSpinning) return;
 
         const spinDuration = 5000; // 5 seconds spin
         const spinRevolutions = 5; // Number of full rotations before stopping
@@ -52,13 +90,11 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
         const midAngle = startAngle + sliceAngle / 2;
 
         // Calculate the final rotation to stop at the winner
-        // Adjust by 180 degrees to align with the top indicator
         const stopAngle = (360 - midAngle + 270) % 360; // 270 degrees offset to align with the top pointer
         const totalRotation = spinRevolutions * 360 + stopAngle;
 
         const startTime = performance.now();
         const animate = (time: number) => {
-            setIsSpinning(true);
             const elapsed = time - startTime;
             const progress = Math.min(elapsed / spinDuration, 1);
             const easeProgress = easeOutCubic(progress);
@@ -81,57 +117,7 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
                 cancelAnimationFrame(requestRef.current);
             }
         };
-    }, [winner, users, totalChance]);
-
-    useEffect(() => {
-        const channel = pusherClient
-            .subscribe(chanelName)
-            .bind("evt::test", (data: WinnerSelectedPusherMessage) => {
-                console.log("Got pusher event", data)
-                if (data.messageCreator.id != myUser.id) {
-                    toast(`Spin started by ${data.messageCreator.name}`)
-                    const winnerId = data.winnerId
-                    const winner = users.find(item => item.id === winnerId);
-                    setWinner(winner!);
-                }
-            });
-
-        return () => {
-            channel.unbind();
-        };
-    },);
-
-    const newUserJoinedTopic = `new-user-joined-team-${teamId}`;
-
-    const [localUsers, setLocalUsers] = useState(users);
-
-    useEffect(() => {
-        const sendMessage = async () => {
-            try {
-                await sendNewUserJoinedMsg(teamId, myUser);
-            } catch (error) {
-                console.error("Failed to send new user joined message:", error);
-                toast.error("Failed to notify others about joining");
-            }
-        };
-        void sendMessage();
-    }, [teamId, myUser]);
-
-    useEffect(() => {
-        const channel = pusherClient
-            .subscribe(newUserJoinedTopic)
-            .bind("evt::test", (data: NewUserJoinedPusherMessage) => {
-                console.log("Got new user joined event", data)
-                if (data.user.id !== myUser.id) {
-                    toast(`New user joined: ${data.user.name}`);
-                    router.refresh();
-                }                       
-            });
-
-        return () => {
-            pusherClient.unsubscribe(newUserJoinedTopic);
-        };
-    }, [newUserJoinedTopic, myUser.id]);
+    }, [winner, users, totalChance, isSpinning]);
 
     const easeOutCubic = (t: number): number => {
         return 1 - Math.pow(1 - t, 3);
@@ -149,6 +135,7 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
         if (isSpinning) return;
         
         setIsSpinning(true);
+        setWinner(null); // Reset winner before new spin
         try {
             const result = await generateWinner(teamId, myUser);
             if (result) {
@@ -225,7 +212,7 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
                 <Button onClick={clickSpinButton} disabled={isSpinning}>
                     {isSpinning ? 'Spinning...' : 'Spin the Wheel'}
                 </Button>
-                {winner && (
+                {winner && !isSpinning && (
                     <p className="mt-4 text-lg font-semibold text-center">
                         Winner: {winner.name}!
                     </p>
