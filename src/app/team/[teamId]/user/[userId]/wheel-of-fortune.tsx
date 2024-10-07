@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import type { User } from '~/db/schema';
 import { pusherClient } from '~/libs/client';
 import { sendWinnderSelectedMsg, type WinnerSelectedPusherMessage } from '~/serverActions/pusherAction';
+import { generateWinner } from '~/serverActions/wheelActions';
 
 const NEW_WINER_TOPIC = "new-winner-";
 
@@ -39,27 +40,13 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
     //Handle click on spin button
     const clickSpinnButton = async () => {
         if (isSpinning || users.length < 2) return;
-        
-        
-        console.log(`Ranomizing winner`)
 
-
-        const randomValue = Math.random() * totalChance;
-        let accumulatedChance = 0;
-        let winningSlice: User | null = null;
-
-        for (const item of users) {
-            accumulatedChance += item.chance;
-            if (randomValue < accumulatedChance) {
-                winningSlice = item;
-                break;
-            }
-        }
         setWinner(null)
-        setTimeout(() => {
-            setWinner(winningSlice);
+        setTimeout(async () => {
+            const newWinner = await generateWinner(teamId, myUser);
+            setWinner(newWinner);
         }, 0);
-        await sendWinnderSelectedMsg(winningSlice!.id, myUser, teamId)
+
     };
 
     //Triger on winner change
