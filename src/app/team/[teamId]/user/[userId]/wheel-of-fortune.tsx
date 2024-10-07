@@ -33,82 +33,17 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
     const wheelRef = useRef<SVGGElement>(null);
     const requestRef = useRef<number | null>(null);
 
-    const chanelName = NEW_WINER_TOPIC + teamId
-
     const totalChance = users.reduce((sum, item) => sum + item.chance, 0);
 
-    const firstItemAngle = 88 + (users[0]!.chance / totalChance) * 360 / 2;
-
-    //Handle click on spin button
-    const clickSpinnButton = async () => {
-        if (isSpinning || users.length < 2) return;
-
-        setWinner(null)
-        const newWinner = await generateWinner(teamId, myUser);
-        setWinner(newWinner);
-    };
-
-    //Triger on winner change
-    useEffect(() => {
-        if (!winner) return;
-
-        const spinDuration = 2000;
-        const spinRevolutions = 2;
-        const startRotation = 0;
-
-        const sliceAngle = (winner.chance / totalChance) * 360;
-        const startAngle = users.slice(0, users.indexOf(winner)).reduce((sum, i) => sum + (i.chance / totalChance) * 360, 0);
-        const midAngle = startAngle + sliceAngle / 2;
-
-        const extraSpinAngle = 360 - midAngle;
-        const totalSpinAngle = spinRevolutions * 360 + extraSpinAngle;
-
-        const finalRotation = totalSpinAngle;
-
-        const startTime = performance.now();
-        const animate = (time: number) => {
-            setIsSpinning(true);
-            const elapsed = time - startTime;
-            const progress = Math.min(elapsed / spinDuration, 1);
-            const easeProgress = easeOutCubic(progress);
-            const currentRotation = startRotation + easeProgress * finalRotation;
-
-            setRotation(currentRotation % 360);
-
-            if (progress < 1) {
-                requestRef.current = requestAnimationFrame(animate);
-            } else {
-                setIsSpinning(false);
-            }
-        };
-
-        requestRef.current = requestAnimationFrame(animate);
-
-    }, [winner]);
+    const NEW_WINNER_TOPIC = `new-winner-${teamId}`;
+    const NEW_USER_JOINED_TOPIC = `new-user-joined-team-${teamId}`;
 
     useEffect(() => {
-        const channel = pusherClient
-            .subscribe(chanelName)
-            .bind("evt::test", (data: WinnerSelectedPusherMessage) => {
-                console.log("Got pusher event", data)
-                if (data.messageCreator.id != myUser.id) {
-                    toast(`Spin started by ${data.messageCreator.name}`)
-                    const winnerId = data.winnerId
-                    const winner = users.find(item => item.id === winnerId);
-                    setWinner(winner!);
-                }
-            });
+        // Subscribe to Pusher channels
+        const newWinnerChannel = pusherClient.subscribe(NEW_WINNER_TOPIC);
+        const newUserJoinedChannel = pusherClient.subscribe(NEW_USER_JOINED_TOPIC);
 
-        return () => {
-            channel.unbind();
-        };
-    },);
 
-    const newUserJoinedTopic = `new-user-joined-team-${teamId}`;
-
-    const [localUsers, setLocalUsers] = useState(users);
-
-    useEffect(() => {
         const sendMessage = async () => {
             try {
                 await sendNewUserJoinedMsg(teamId, myUser);
@@ -117,24 +52,83 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
                 toast.error("Failed to notify others about joining");
             }
         };
+    
+        // Use void operator to explicitly ignore the promise
         void sendMessage();
-    }, [teamId, myUser]);
+        
+        // Handle new winner event
+        newWinnerChannel.bind("evt::test", (data: WinnerSelectedPusherMessage) => {
+            console.log("Got pusher event", data);
+            if (data.messageCreator.id !== myUser.id) {
+                toast(`Spin started by ${data.messageCreator.name}`);
+                const winnerId = data.winnerId;
+                const winner = users.find(item => item.id === winnerId);
+                if (winner) {
+                    setWinner(winner);
+                    setIsSpinning(true);
+                }
+            }
+        });
 
+        // Handle new user joined event
+        newUserJoinedChannel.bind("evt::test", (data: NewUserJoinedPusherMessage) => {
+            console.log("Got new user joined event", data);
+            if (data.user.id !== myUser.id) {
+                toast(`New user joined: ${data.user.name}`);
+                // Optionally refresh the page or update the users list
+                router.refresh();
+            }
+        });
+
+        // Cleanup function
+        return () => {
+            pusherClient.unsubscribe(NEW_WINNER_TOPIC);
+            pusherClient.unsubscribe(NEW_USER_JOINED_TOPIC);
+        };
+    }, []); // Empty dependency array ensures this runs only once on mount
+
+    //Trigger on winner change
     useEffect(() => {
-        const channel = pusherClient
-            .subscribe(newUserJoinedTopic)
-            .bind("evt::test", (data: NewUserJoinedPusherMessage) => {
-                console.log("Got new user joined event", data)
-                if (data.user.id !== myUser.id) {
-                    toast(`New user joined: ${data.user.name}`);
-                    router.refresh();
-                }                       
-            });
+        if (!winner || !isSpinning) return;
+
+        const spinDuration = 5000; // 5 seconds spin
+        const spinRevolutions = 5; // Number of full rotations before stopping
+
+        // Calculate the winner's slice
+        const winnerIndex = users.findIndex(user => user.id === winner.id);
+        const sliceAngle = (winner.chance / totalChance) * 360;
+        const startAngle = users.slice(0, winnerIndex).reduce((sum, user) => sum + (user.chance / totalChance) * 360, 0);
+        const midAngle = startAngle + sliceAngle / 2;
+
+        // Calculate the final rotation to stop at the winner
+        const stopAngle = (360 - midAngle + 270) % 360; // 270 degrees offset to align with the top pointer
+        const totalRotation = spinRevolutions * 360 + stopAngle;
+
+        const startTime = performance.now();
+        const animate = (time: number) => {
+            const elapsed = time - startTime;
+            const progress = Math.min(elapsed / spinDuration, 1);
+            const easeProgress = easeOutCubic(progress);
+            const currentRotation = easeProgress * totalRotation;
+
+            setRotation(currentRotation % 360);
+
+            if (progress < 1) {
+                requestRef.current = requestAnimationFrame(animate);
+            } else {
+                setIsSpinning(false);
+                setRotation(stopAngle);
+            }
+        };
+
+        requestRef.current = requestAnimationFrame(animate);
 
         return () => {
-            pusherClient.unsubscribe(newUserJoinedTopic);
+            if (requestRef.current) {
+                cancelAnimationFrame(requestRef.current);
+            }
         };
-    }, [newUserJoinedTopic, myUser.id]);
+    }, [winner, users, totalChance, isSpinning]);
 
     const easeOutCubic = (t: number): number => {
         return 1 - Math.pow(1 - t, 3);
@@ -148,6 +142,30 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
         };
     }, []);
 
+    const clickSpinButton = async () => {
+        if (isSpinning) return;
+        
+        setIsSpinning(true);
+        setWinner(null); // Reset winner before new spin
+        try {
+            const result = await generateWinner(teamId, myUser);
+            if (result) {
+                const winnerUser = users.find(user => user.id === result.id);
+                if (winnerUser) {
+                    setWinner(winnerUser);
+                } else {
+                    throw new Error("Winner not found in users list");
+                }
+            } else {
+                throw new Error("No winner returned");
+            }
+        } catch (error) {
+            console.error("Error generating winner:", error);
+            toast.error("Failed to generate winner. Please try again.");
+            setIsSpinning(false);
+        }
+    };
+
     return (
         <Card className="w-full max-w-md mx-auto">
             <CardHeader>
@@ -156,9 +174,9 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
             <CardContent className="flex flex-col items-center">
                 <div className="relative w-72 h-72 mb-4">
                     <svg viewBox="0 0 100 100" className="w-full h-full">
-                        <g ref={wheelRef} transform={`rotate(${rotation - firstItemAngle} 50 50)`}>
+                        <g ref={wheelRef} transform={`rotate(${rotation} 50 50)`}>
                             {users.map((item, index) => {
-                                const sliceAngle = users.length === 1 ? 360 : (item.chance / totalChance) * 360;
+                                const sliceAngle = (item.chance / totalChance) * 360;
                                 const startAngle = users.slice(0, index).reduce((sum, i) => sum + (i.chance / totalChance) * 360, 0);
                                 const midAngle = startAngle + sliceAngle / 2;
                                 const endAngle = startAngle + sliceAngle;
@@ -202,10 +220,10 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
                         <path d="M 50 0 L 55 10 L 45 10 Z" fill="black" />
                     </svg>
                 </div>
-                <Button onClick={clickSpinnButton} disabled={isSpinning}>
+                <Button onClick={clickSpinButton} disabled={isSpinning}>
                     {isSpinning ? 'Spinning...' : 'Spin the Wheel'}
                 </Button>
-                {winner && (
+                {winner && !isSpinning && (
                     <p className="mt-4 text-lg font-semibold text-center">
                         Winner: {winner.name}!
                     </p>
