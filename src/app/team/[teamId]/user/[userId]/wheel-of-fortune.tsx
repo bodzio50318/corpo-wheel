@@ -8,9 +8,14 @@ import type { User } from '~/db/schema';
 import { pusherClient } from '~/libs/client';
 import { NewUserJoinedPusherMessage, sendNewUserJoinedMsg, type WinnerSelectedPusherMessage } from '~/serverActions/pusherAction';
 import { generateWinner } from '~/serverActions/wheelActions';
+import { LonelyLoserBanner } from './lonelny-banner';
 
-const NEW_WINER_TOPIC = "new-winner-";
 
+export const NEW_WINNER_TOPIC = `new-winner-`;
+export const NEW_USER_JOINED_TOPIC = `new-user-joined-team`;
+
+export const NEW_WINNER_EVENT = "evnt::new-winner";
+export const NEW_USER_JOINED_EVENT = "evnt::new-user-joined";
 interface WheelOfFortuneProps {
     teamId: number;
     users: User[];
@@ -35,13 +40,12 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
 
     const totalChance = users.reduce((sum, item) => sum + item.chance, 0);
 
-    const NEW_WINNER_TOPIC = `new-winner-${teamId}`;
-    const NEW_USER_JOINED_TOPIC = `new-user-joined-team-${teamId}`;
+    
 
     useEffect(() => {
         // Subscribe to Pusher channels
-        const newWinnerChannel = pusherClient.subscribe(NEW_WINNER_TOPIC);
-        const newUserJoinedChannel = pusherClient.subscribe(NEW_USER_JOINED_TOPIC);
+        const newWinnerChannel = pusherClient.subscribe(NEW_WINNER_TOPIC+teamId);
+        const newUserJoinedChannel = pusherClient.subscribe(NEW_USER_JOINED_TOPIC+teamId);
 
 
         const sendMessage = async () => {
@@ -57,7 +61,7 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
         void sendMessage();
         
         // Handle new winner event
-        newWinnerChannel.bind("evt::test", (data: WinnerSelectedPusherMessage) => {
+        newWinnerChannel.bind(NEW_WINNER_EVENT, (data: WinnerSelectedPusherMessage) => {
             console.log("Got pusher event", data);
             if (data.messageCreator.id !== myUser.id) {
                 toast(`Spin started by ${data.messageCreator.name}`);
@@ -71,7 +75,7 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
         });
 
         // Handle new user joined event
-        newUserJoinedChannel.bind("evt::test", (data: NewUserJoinedPusherMessage) => {
+        newUserJoinedChannel.bind(NEW_USER_JOINED_EVENT, (data: NewUserJoinedPusherMessage) => {
             console.log("Got new user joined event", data);
             if (data.user.id !== myUser.id) {
                 toast(`New user joined: ${data.user.name}`);
@@ -167,6 +171,9 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
     };
 
     return (
+        <>
+        {users.length === 1 && <LonelyLoserBanner />}
+        {users.length > 1 && (
         <Card className="w-full max-w-md mx-auto">
             <CardHeader>
                 <CardTitle className="text-2xl font-bold text-center">Wheel of Corpo</CardTitle>
@@ -229,6 +236,7 @@ export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortune
                     </p>
                 )}
             </CardContent>
-        </Card>
+        </Card>)}
+        </>
     );
 }

@@ -3,7 +3,7 @@
 
 ##TO DO
 
-Separate local from prod
+make the voting work
+make the welocme page and the whole team creation nice 
 not stop in the middlle
-use env in pusher
 not duplicate topic const

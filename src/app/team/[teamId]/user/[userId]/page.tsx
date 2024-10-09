@@ -15,7 +15,7 @@ export default async function TeamPage({ params }: { params: { teamId: number, u
 
     const users = await getAllUsersByTeamId(params.teamId);
     return (
-        <main className="flex min-h-screen flex-row items-center justify-center p-24">
+        <main className="flex min-h-screen p-6">
             <div className="flex-1 mr-8">
                 <VotingTable />
             </div>
