@@ -1,5 +1,6 @@
 import { sql, type InferSelectModel } from "drizzle-orm";
 import {
+  boolean,
   index,
   integer,
   pgTableCreator,
@@ -43,6 +44,7 @@ export const user = createTable(
     teamId: integer("team_id")
       .references(() => team.id)
       .notNull(),
+    hasVoted: boolean("has_voted").default(false).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),

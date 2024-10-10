@@ -9,6 +9,7 @@ import { pusherClient } from '~/libs/client';
 import { NewUserJoinedPusherMessage, sendNewUserJoinedMsg, type WinnerSelectedPusherMessage } from '~/serverActions/pusherAction';
 import { generateWinner } from '~/serverActions/wheelActions';
 import { LonelyLoserBanner } from './lonelny-banner';
+import { TeamPageProps } from './page';
 
 
 export const NEW_WINNER_TOPIC = `new-winner-`;
@@ -16,11 +17,7 @@ export const NEW_USER_JOINED_TOPIC = `new-user-joined-team`;
 
 export const NEW_WINNER_EVENT = "evnt::new-winner";
 export const NEW_USER_JOINED_EVENT = "evnt::new-user-joined";
-interface WheelOfFortuneProps {
-    teamId: number;
-    users: User[];
-    myUser: User;
-}
+
 
 const COLORS = [
     '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A',
@@ -30,7 +27,7 @@ const COLORS = [
     '#FF6347', '#4682B4'
 ];
 
-export default function WheelOfFortune({ teamId, users, myUser }: WheelOfFortuneProps) {
+export default function WheelOfFortune({ teamId, users, myUser }: TeamPageProps) {
     const router = useRouter();
     const [rotation, setRotation] = useState(0);
     const [isSpinning, setIsSpinning] = useState(false);

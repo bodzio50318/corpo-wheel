@@ -3,6 +3,14 @@ import { selectTeamById } from "~/db/dataAcces/teamCrud";
 import { getAllUsersByTeamId, getUserById } from "~/db/dataAcces/userCrud";
 import WheelOfFortune from "./wheel-of-fortune";
 import VotingTable from './voting-table';
+import { User } from '~/db/schema';
+
+export interface TeamPageProps {
+    teamId: number;
+    users: User[];
+    myUser: User;
+}
+
 
 export default async function TeamPage({ params }: { params: { teamId: number, userId: number } }) {
 
@@ -17,7 +25,7 @@ export default async function TeamPage({ params }: { params: { teamId: number, u
     return (
         <main className="flex min-h-screen p-6">
             <div className="flex-1 mr-8">
-                <VotingTable />
+                <VotingTable teamId={params.teamId} users={users!} myUser={user!} />
             </div>
             <div className="flex-1">
                 <WheelOfFortune teamId={params.teamId} users={users!} myUser={user!} />
