@@ -25,3 +25,11 @@ export async function getUserById(userId: number): Promise<User | undefined> {
     const result = await db.select().from(user).where(eq(user.id, userId));
     return result[0];
 }
+
+export async function updateUserName(userId: number, newName: string): Promise<User> {
+    const result = await db.update(user).set({ name: newName }).where(eq(user.id, userId)).returning();
+    if (result[0] == null) {
+        throw new Error("Error while updating user name")
+    }
+    return result[0];
+}

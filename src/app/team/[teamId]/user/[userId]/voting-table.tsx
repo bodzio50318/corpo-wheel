@@ -7,12 +7,16 @@ import { Card, CardContent } from '~/components/ui/card'
 import { Input } from "~/components/ui/input"
 import { User } from '~/db/schema'
 import { TeamPageProps } from './page'
+import { updateUserName } from '~/db/dataAcces/userCrud'
+import { useRouter } from 'next/navigation';
 
 export default function UserVotingTable({ teamId, users, myUser }: TeamPageProps) {
-    const [usersList, setUsers] = useState<User[]>(users)
+  const router = useRouter();  
+  const [usersList, setUsers] = useState<User[]>(users)
     const [currentVote, setCurrentVote] = useState<number | null>(null)
     const [editingUserId, setEditingUserId] = useState<number | null>(null)
-  
+    const [editingName, setEditingName] = useState("")
+
     const handleVoteSubmit = (userId: number) => {
       if (currentVote !== null) {
         setUsers(prevUsers =>
@@ -28,15 +32,28 @@ export default function UserVotingTable({ teamId, users, myUser }: TeamPageProps
       setUsers(prevUsers => prevUsers.filter(user => user.id !== userId))
     }
   
-    const handleEditName = (userId: number, newName: string) => {
+    const handleEditName = async (userId: number) => {
+      await updateUserName(userId, editingName)
       setUsers(prevUsers =>
         prevUsers.map(user =>
-          user.id === userId ? { ...user, name: newName } : user
+          user.id === userId ? { ...user, name: editingName } : user
         )
+      
       )
+      router.refresh();
       setEditingUserId(null)
+      setEditingName("")
     }
-  
+
+    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setEditingName(e.target.value)
+    }
+
+    const handleNameClick = (userId: number, currentName: string) => {
+      setEditingUserId(userId)
+      setEditingName(currentName)
+    }
+
     return (
       <div className="w-full max-w-4xl mx-auto p-4">
         <h2 className="text-2xl font-bold mb-6">Team Voting</h2>
@@ -50,15 +67,16 @@ export default function UserVotingTable({ teamId, users, myUser }: TeamPageProps
                   </div>
                   <div className="flex-grow">
                     {editingUserId === user.id ? (
-                      <Input
-                        value={user.name}
-                        onChange={(e) => handleEditName(user.id, e.target.value)}
-                        onBlur={() => setEditingUserId(null)}
+                      <input
+                        value={editingName}
+                        onChange={handleNameChange}
+                        onBlur={() => handleEditName(user.id)}
+                        onKeyUp={(e) => e.key === 'Enter' && handleEditName(user.id)}
                         autoFocus
                         className="text-sm font-medium"
                       />
                     ) : (
-                      <h3 className="text-sm font-medium">{user.name}</h3>
+                      <span onClick={() => handleNameClick(user.id, user.name)}>{user.name}</span>
                     )}
                     <Badge className="mt-1">
                       {user.hasVoted ? "Voted" : "Not voted"}
