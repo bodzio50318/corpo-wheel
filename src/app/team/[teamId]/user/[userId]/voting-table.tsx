@@ -7,15 +7,16 @@ import { Card, CardContent } from '~/components/ui/card'
 import { Input } from "~/components/ui/input"
 import { User } from '~/db/schema'
 import { TeamPageProps } from './page'
-import { updateUserName } from '~/db/dataAcces/userCrud'
+import { addUserToTeam, deleteUser, updateUserName } from '~/db/dataAcces/userCrud'
 import { useRouter } from 'next/navigation';
 
 export default function UserVotingTable({ teamId, users, myUser }: TeamPageProps) {
-  const router = useRouter();  
-  const [usersList, setUsers] = useState<User[]>(users)
+    const router = useRouter();  
+    const [usersList, setUsers] = useState<User[]>(users)
     const [currentVote, setCurrentVote] = useState<number | null>(null)
     const [editingUserId, setEditingUserId] = useState<number | null>(null)
     const [editingName, setEditingName] = useState("")
+    const [isAddingUser, setIsAddingUser] = useState(false)
 
     const handleVoteSubmit = (userId: number) => {
       if (currentVote !== null) {
@@ -28,8 +29,10 @@ export default function UserVotingTable({ teamId, users, myUser }: TeamPageProps
       }
     }
   
-    const handleRemoveUser = (userId: number) => { 
+    const handleRemoveUser = async (userId: number) => { 
+      await deleteUser(userId)
       setUsers(prevUsers => prevUsers.filter(user => user.id !== userId))
+      router.refresh();
     }
   
     const handleEditName = async (userId: number) => {
@@ -52,6 +55,16 @@ export default function UserVotingTable({ teamId, users, myUser }: TeamPageProps
     const handleNameClick = (userId: number, currentName: string) => {
       setEditingUserId(userId)
       setEditingName(currentName)
+    }
+
+    const handleAddUser = async () => {
+      if (editingName.trim()) {
+        const newUser = await addUserToTeam(teamId, editingName.trim())
+        setUsers(prevUsers => [...prevUsers, newUser])
+        setIsAddingUser(false)
+        setEditingName("")
+        router.refresh();
+      }
     }
 
     return (
@@ -129,6 +142,21 @@ export default function UserVotingTable({ teamId, users, myUser }: TeamPageProps
               </CardContent>
             </Card>
           ))}
+          {isAddingUser ? (
+            <div>
+              <input
+                value={editingName}
+                onChange={handleNameChange}
+                placeholder="Enter new user name"
+                onBlur={handleAddUser}
+                onKeyUp={(e) => e.key === 'Enter' && handleAddUser()}
+              />
+            </div>
+          ) : (
+            <div onClick={() => setIsAddingUser(true)}>
+              + Add new user
+            </div>
+          )}
         </div>
       </div>
     )

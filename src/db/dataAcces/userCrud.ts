@@ -33,3 +33,7 @@ export async function updateUserName(userId: number, newName: string): Promise<U
     }
     return result[0];
 }
+
+export async function deleteUser(userId: number): Promise<void> {
+    await db.delete(user).where(eq(user.id, userId));
+}
