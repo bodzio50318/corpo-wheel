@@ -37,8 +37,6 @@ export default function WheelOfFortune({ teamId, users, myUser }: TeamPageProps)
 
     const totalChance = users.reduce((sum, item) => sum + item.chance, 0);
 
-    
-
     useEffect(() => {
         // Subscribe to Pusher channels
         const newWinnerChannel = pusherClient.subscribe(NEW_WINNER_TOPIC+teamId);
@@ -99,10 +97,10 @@ export default function WheelOfFortune({ teamId, users, myUser }: TeamPageProps)
         const winnerIndex = users.findIndex(user => user.id === winner.id);
         const sliceAngle = (winner.chance / totalChance) * 360;
         const startAngle = users.slice(0, winnerIndex).reduce((sum, user) => sum + (user.chance / totalChance) * 360, 0);
-        const midAngle = startAngle + sliceAngle / 2;
-
-        // Calculate the final rotation to stop at the winner
-        const stopAngle = (360 - midAngle + 270) % 360; // 270 degrees offset to align with the top pointer
+        
+        // Add randomness to where the wheel stops within the winner's slice
+        const randomOffset = Math.random() * sliceAngle;
+        const stopAngle = (360 - (startAngle + randomOffset) + 270) % 360; // 270 degrees offset to align with the top pointer
         const totalRotation = spinRevolutions * 360 + stopAngle;
 
         const startTime = performance.now();
@@ -119,6 +117,7 @@ export default function WheelOfFortune({ teamId, users, myUser }: TeamPageProps)
             } else {
                 setIsSpinning(false);
                 setRotation(stopAngle);
+                console.log('Final rotation:', stopAngle);
             }
         };
 
