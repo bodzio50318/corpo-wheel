@@ -37,3 +37,7 @@ export async function updateUserName(userId: number, newName: string): Promise<U
 export async function deleteUser(userId: number): Promise<void> {
     await db.delete(user).where(eq(user.id, userId));
 }
+
+export async function updateUserVote(userId: number): Promise<void> {
+    await db.update(user).set({ hasVoted: true }).where(eq(user.id, userId));
+}

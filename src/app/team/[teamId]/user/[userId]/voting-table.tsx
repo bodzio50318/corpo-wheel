@@ -7,7 +7,7 @@ import { Card, CardContent } from '~/components/ui/card'
 import { Input } from "~/components/ui/input"
 import { User } from '~/db/schema'
 import { TeamPageProps } from './page'
-import { addUserToTeam, deleteUser, updateUserName } from '~/db/dataAcces/userCrud'
+import { addUserToTeam, deleteUser, updateUserName, updateUserVote } from '~/db/dataAcces/userCrud'
 import { useRouter } from 'next/navigation';
 
 export default function UserVotingTable({ teamId, users, myUser }: TeamPageProps) {
@@ -18,13 +18,14 @@ export default function UserVotingTable({ teamId, users, myUser }: TeamPageProps
     const [editingName, setEditingName] = useState("")
     const [isAddingUser, setIsAddingUser] = useState(false)
 
-    const handleVoteSubmit = (userId: number) => {
+    const handleVoteSubmit = async (userId: number) => {
       if (currentVote !== null) {
         setUsers(prevUsers =>
           prevUsers.map(user =>
             user.id === userId ? { ...user, vote: currentVote, hasVoted: true } : user
           )
         )
+        await updateUserVote(userId)
         setCurrentVote(null)
       }
     }
