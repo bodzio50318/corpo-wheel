@@ -1,6 +1,6 @@
 "use client"
 
-import { Badge, Check, Edit2, Trash2 } from 'lucide-react'
+import { Badge, Check, Edit2, Trash2 ,UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from "~/components/ui/button"
 import { Card, CardContent } from '~/components/ui/card'
@@ -142,21 +142,41 @@ export default function UserVotingTable({ teamId, users, myUser }: TeamPageProps
               </CardContent>
             </Card>
           ))}
-          {isAddingUser ? (
-            <div>
-              <input
-                value={editingName}
-                onChange={handleNameChange}
-                placeholder="Enter new user name"
-                onBlur={handleAddUser}
-                onKeyUp={(e) => e.key === 'Enter' && handleAddUser()}
-              />
-            </div>
-          ) : (
-            <div onClick={() => setIsAddingUser(true)}>
-              + Add new user
-            </div>
-          )}
+          <Card className="overflow-hidden">
+            <CardContent className="p-4">
+              {isAddingUser ? (
+                <div className="flex items-center space-x-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold">
+                    <UserPlus className="h-6 w-6" />
+                  </div>
+                  <div className="flex-grow">
+                    <Input
+                      value={editingName}
+                      onChange={handleNameChange}
+                      placeholder="Enter new user name"
+                      onBlur={handleAddUser}
+                      onKeyUp={(e) => e.key === 'Enter' && handleAddUser()}
+                      autoFocus
+                      className="text-sm font-medium"
+                    />
+                  </div>
+                  <Button onClick={handleAddUser} size="sm">
+                    Add
+                  </Button>
+                </div>
+              ) : (
+                <div 
+                  onClick={() => setIsAddingUser(true)}
+                  className="flex items-center space-x-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold">
+                    <UserPlus className="h-6 w-6" />
+                  </div>
+                  <span className="text-sm font-medium">Add new user</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
