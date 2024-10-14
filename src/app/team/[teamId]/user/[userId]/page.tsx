@@ -16,11 +16,13 @@ export interface TeamPageProps {
 export default async function TeamPage({ params }: { params: { teamId: number, userId: number } }) {
     const session = await getSession()
 
-    if (!session) {
-        redirect("/")
+    if (!session || session.teamId != params.teamId) {
+     console.log("No session")
+        redirect("/unauthorized")
     }
 
-    
+
+    console.log(session)    
 
     const team = await selectTeamById(params.teamId)
     const user = await getUserById(params.userId)
