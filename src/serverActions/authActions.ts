@@ -2,7 +2,7 @@
 
 
 import bcrypt from 'bcrypt';
-import { SignJWT, jwtVerify } from "jose";
+import { JWTPayload, SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { selectTeamById } from "~/db/dataAcces/teamCrud";
@@ -11,16 +11,15 @@ import { selectTeamById } from "~/db/dataAcces/teamCrud";
 const key = new TextEncoder().encode(process.env.SECRET_KEY);
 
 
-export async function encrypt(payload: any) {
+export async function encrypt(payload: JWTPayload) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setSubject(payload.teamId)
     .setExpirationTime("1h") // Changed from "10 sec from now" to "1h"
     .sign(key);
 }
 
-export async function decrypt(input: string): Promise<any> {
+export async function decrypt(input: string): Promise<JWTPayload> {
   const { payload } = await jwtVerify(input, key, {
     algorithms: ["HS256"],
   });
@@ -44,7 +43,7 @@ if (!dbTeam.passwordHash ) {
   }
 
   // Compare the provided password with the stored hash
-  const passwordMatch = await bcrypt.compare(password, dbTeam.passwordHash!);
+  const passwordMatch = await bcrypt.compare(password, dbTeam.passwordHash);
 
   if (!passwordMatch) {
     throw new Error("Invalid password");
@@ -63,7 +62,7 @@ export async function logout() {
   cookies().set("session", "", { expires: new Date(0) });
 }
 
-export async function getSession() {
+export async function getSession(): Promise<JWTPayload | null> {
   const session = cookies().get("session")?.value;
   if (!session) return null;
   return await decrypt(session);
@@ -81,7 +80,7 @@ export async function updateSession(request: NextRequest) {
     const res = NextResponse.next();
     res.cookies.set({
       name: "session",
-      value: await encrypt(newPayload),
+      value: await encrypt(newPayload as JWTPayload),
       httpOnly: true,
       expires: newExpires,
     });

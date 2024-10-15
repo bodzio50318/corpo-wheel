@@ -15,7 +15,7 @@ export default function UnauthorizedPage() {
         </CardHeader>
         <CardContent>
           <p className="text-gray-600">
-            Sorry, you don't have permission to access this page. If you believe this is an error, please contact your administrator.
+            Sorry, you don&apost have permission to access this page. If you believe this is an error, please contact your administrator.
           </p>
         </CardContent>
         <CardFooter className="flex justify-end">
