@@ -21,7 +21,8 @@ export const team = createTable(
   "team",
   {
     id: serial("id").primaryKey(),
-    name: varchar("name", { length: 256 }).unique(),
+    name: varchar("name", { length: 256 }),
+    passwordHash: varchar("password_hash", { length: 256 }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),

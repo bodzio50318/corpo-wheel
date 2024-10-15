@@ -4,6 +4,7 @@ import { getAllUsersByTeamId, getUserById } from "~/db/dataAcces/userCrud";
 import WheelOfFortune from "./wheel-of-fortune";
 import VotingTable from './voting-table';
 import { User } from '~/db/schema';
+import { getSession } from '~/serverActions/authActions';
 
 export interface TeamPageProps {
     teamId: number;
@@ -13,6 +14,20 @@ export interface TeamPageProps {
 
 
 export default async function TeamPage({ params }: { params: { teamId: number, userId: number } }) {
+    const session = await getSession()
+
+    if (!session) {
+     console.log("No session")
+        redirect("/unauthorized")
+    }
+
+    if (session.teamId != params.teamId) {
+        console.log("TeamId mismatch")
+        redirect("/unauthorized")
+    }
+
+
+    console.log(session)    
 
     const team = await selectTeamById(params.teamId)
     const user = await getUserById(params.userId)
