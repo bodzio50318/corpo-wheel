@@ -5,6 +5,7 @@ import WheelOfFortune from "./wheel-of-fortune";
 import VotingTable from './voting-table';
 import { User } from '~/db/schema';
 import { getSession } from '~/serverActions/authActions';
+import { getSession } from '~/serverActions/authActions';
 
 export interface TeamPageProps {
     teamId: number;
