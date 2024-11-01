@@ -76,7 +76,10 @@ export default function UserVotingTable({ teamId, users, myUser }: TeamPageProps
             <Card key={user.id} className="overflow-hidden">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-4 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold">
+                <div 
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+                  style={{ backgroundColor: user.color }}
+                >
                     {user.name.slice(0, 2).toUpperCase()}
                   </div>
                   <div className="flex-grow">

@@ -22,7 +22,12 @@ export async function generateWinner(teamId: number,user:User): Promise<User> {
             break;
         }
     }
-    await sendWinnderSelectedMsg(winningSlice!.id, user, teamId)
+    
+    if (!winningSlice){
+        throw new Error("Failed selecting winner")
+    }
 
-    return winningSlice!
+    await sendWinnderSelectedMsg(winningSlice.id, user, teamId)
+
+    return winningSlice
 }
