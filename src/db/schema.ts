@@ -41,10 +41,11 @@ export const user = createTable(
   {
     id: serial("id").primaryKey(),
     name: varchar("name", { length: 256 }).notNull(),
-    chance: integer("chance").default(10).notNull(),
+    chance: integer("chance").notNull(),
     teamId: integer("team_id")
       .references(() => team.id)
       .notNull(),
+    color: varchar("color",{length:7}).default("#FF6B6B").notNull(),
     hasVoted: boolean("has_voted").default(false).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)

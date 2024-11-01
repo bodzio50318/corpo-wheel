@@ -4,12 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
-import type { User } from '~/db/schema';
+import { team, type User } from '~/db/schema';
 import { pusherClient } from '~/libs/client';
 import { NewUserJoinedPusherMessage, sendNewUserJoinedMsg, type WinnerSelectedPusherMessage } from '~/serverActions/pusherAction';
 import { generateWinner } from '~/serverActions/wheelActions';
 import { LonelyLoserBanner } from './lonelny-banner';
 import { TeamPageProps } from './page';
+import WinnerPopup from './winnerPopup';
+import { acceptResult } from '~/serverActions/teamActions';
 
 
 export const NEW_WINNER_TOPIC = `new-winner-`;
@@ -18,14 +20,6 @@ export const NEW_USER_JOINED_TOPIC = `new-user-joined-team`;
 export const NEW_WINNER_EVENT = "evnt::new-winner";
 export const NEW_USER_JOINED_EVENT = "evnt::new-user-joined";
 
-
-const COLORS = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A',
-    '#98D8C8', '#F06292', '#AED581', '#7986CB',
-    '#FFD700', '#FF4500', '#8A2BE2', '#00CED1',
-    '#FF1493', '#7FFF00', '#DC143C', '#00FA9A',
-    '#FF6347', '#4682B4'
-];
 
 export default function WheelOfFortune({ teamId, users, myUser }: TeamPageProps) {
     const router = useRouter();
@@ -37,13 +31,21 @@ export default function WheelOfFortune({ teamId, users, myUser }: TeamPageProps)
 
     const totalChance = users.reduce((sum, item) => sum + item.chance, 0);
 
+
+    //hadnling accepting the result
+    const handleAccept = async () => {
+        console.log("Result accepted")
+        await acceptResult(winner!,teamId)
+      }
+
+
     useEffect(() => {
         // Subscribe to Pusher channels
         const newWinnerChannel = pusherClient.subscribe(NEW_WINNER_TOPIC+teamId);
         const newUserJoinedChannel = pusherClient.subscribe(NEW_USER_JOINED_TOPIC+teamId);
 
 
-        const sendMessage = async () => {
+        const sendNewUserMessage = async () => {
             try {
                 await sendNewUserJoinedMsg(teamId, myUser);
             } catch (error) {
@@ -53,7 +55,7 @@ export default function WheelOfFortune({ teamId, users, myUser }: TeamPageProps)
         };
     
         // Use void operator to explicitly ignore the promise
-        void sendMessage();
+        void sendNewUserMessage();
         
         // Handle new winner event
         newWinnerChannel.bind(NEW_WINNER_EVENT, (data: WinnerSelectedPusherMessage) => {
@@ -117,9 +119,10 @@ export default function WheelOfFortune({ teamId, users, myUser }: TeamPageProps)
             } else {
                 setIsSpinning(false);
                 setRotation(stopAngle);
-                console.log('Final rotation:', stopAngle);
             }
+
         };
+
 
         requestRef.current = requestAnimationFrame(animate);
 
@@ -202,7 +205,7 @@ export default function WheelOfFortune({ teamId, users, myUser }: TeamPageProps)
 
                                 return (
                                     <g key={item.id}>
-                                        <path d={pathData} fill={COLORS[index % COLORS.length]} stroke="none" />
+                                        <path d={pathData} fill={item.color} stroke="none" />
                                         <text
                                             x={textX}
                                             y={textY}
@@ -227,9 +230,16 @@ export default function WheelOfFortune({ teamId, users, myUser }: TeamPageProps)
                     {isSpinning ? 'Spinning...' : 'Spin the Wheel'}
                 </Button>
                 {winner && !isSpinning && (
-                    <p className="mt-4 text-lg font-semibold text-center">
+                    <div>
+<p className="mt-4 text-lg font-semibold text-center">
                         Winner: {winner.name}!
                     </p>
+                    <WinnerPopup
+        winner={winner.name}
+        onAccept={handleAccept}
+        onReroll={clickSpinButton}/>
+                    </div>
+                    
                 )}
             </CardContent>
         </Card>)}
