@@ -1147,9 +1147,12 @@ packages:
     resolution: {integrity: sha512-bwy0MGW55bG41VqxxypOsdSdGqLwXPI/focwgTYCFMbdUiBAxLg9CFzG08sz2aqzknwiX7Hkl0bQENjg8iLByw==}
     engines: {node: '>=8'}
 
+<<<<<<< HEAD
   detect-node-es@1.1.0:
     resolution: {integrity: sha512-ypdmJU/TbBby2Dxibuv7ZLW3Bs1QEmM7nHjEANfohJLvE0XVujisn1qPJcZxg+qDucsr+bP6fLD1rPS3AhJ7EQ==}
 
+=======
+>>>>>>> main
   didyoumean@1.2.2:
     resolution: {integrity: sha512-gxtyfqMg7GKyhQmb056K7M3xszy/myH8w+B4RT+QXBQsvAOdc3XymqDDPHx1BgPgsdAA5SIifona89YtRATDzw==}
 
@@ -3491,8 +3494,11 @@ snapshots:
 
   detect-libc@2.0.3: {}
 
+<<<<<<< HEAD
   detect-node-es@1.1.0: {}
 
+=======
+>>>>>>> main
   didyoumean@1.2.2: {}
 
   dlv@1.1.3: {}
