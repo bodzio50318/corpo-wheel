@@ -6,10 +6,7 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
 import { createRoomAction, loginAction } from '../serverActions/teamActions'
-<<<<<<< HEAD
 import { useFormState } from 'react-dom'
-=======
->>>>>>> main
 
 export default function WelcomeScreen() {
     const [loginTeamName, setLoginTeamName] = useState('')
@@ -20,15 +17,12 @@ export default function WelcomeScreen() {
     const [createUserName, setCreateUserName] = useState('')
     const [createPassword, setCreatePassword] = useState('')
   
-<<<<<<< HEAD
 
     const [state, formAction] = useFormState<
         { error: string | null },
         FormData
     >(loginAction, { error: null });
     
-=======
->>>>>>> main
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-r from-blue-100 to-purple-100 p-4">
         <div className="w-full max-w-4xl flex flex-col md:flex-row gap-6">
@@ -40,11 +34,7 @@ export default function WelcomeScreen() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-<<<<<<< HEAD
               <form action={formAction} className="space-y-4">
-=======
-              <form action={loginAction} className="space-y-4">
->>>>>>> main
                 <div className="space-y-2">
                   <Label htmlFor="loginTeamName">Team Name</Label>
                   <Input
@@ -79,10 +69,7 @@ export default function WelcomeScreen() {
                     required
                   />
                 </div>
-<<<<<<< HEAD
                 {state.error && <div className="text-red-500">{state.error}</div>}
-=======
->>>>>>> main
                 <Button type="submit" className="w-full">
                   Login
                 </Button>

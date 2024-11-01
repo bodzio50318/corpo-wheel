@@ -2,15 +2,10 @@
 
 import { redirect } from 'next/navigation';
 import { createTeam, selectTeamByName } from "~/db/dataAcces/teamCrud";
-<<<<<<< HEAD
 import { addUserToTeam, getAllUsersByTeamId, getUserByIdAndTeamId, updateUserChance } from "~/db/dataAcces/userCrud";
 import { login } from './authActions';
 import { Team, user, User } from '~/db/schema';
 import { revalidatePath } from 'next/cache';
-=======
-import { addUserToTeam, getUserByIdAndTeamId } from "~/db/dataAcces/userCrud";
-import { login } from './authActions';
->>>>>>> main
 
 export async function createRoomAction(param: FormData) {
     const teamName = param.get("teamName") as string;
@@ -27,7 +22,6 @@ export async function createRoomAction(param: FormData) {
     redirect(`/team/${team.id}/user/${userId}`);
 }
 
-<<<<<<< HEAD
 // Define the return type for the action
 type LoginState = {
     error: string | null;
@@ -40,17 +34,10 @@ export async function loginAction(
     const teamName = formData.get("loginTeamName") as string;
     const username = formData.get("loginUserName") as string;
     const password = formData.get("loginPassword") as string;
-=======
-export async function loginAction(param: FormData) {
-    const teamName = param.get("loginTeamName") as string;
-    const username = param.get("loginUserName") as string;
-    const password = param.get("loginPassword") as string;
->>>>>>> main
 
     console.log(`Trying to login to team: ${teamName}`);
     const team = await selectTeamByName(teamName);
     if (team == null) {
-<<<<<<< HEAD
       return { error: "Invalid password or team name" };
     }
     const user = await getUserByIdAndTeamId(username, team.id);
@@ -93,16 +80,3 @@ export async function acceptResult(winner:User,teamId:number){
 
 
 
-=======
-        throw new Error("Team not found");
-    }
-    const user = await getUserByIdAndTeamId(username, team.id);
-    if (user == null) {
-        throw new Error("User not found");
-    }
-    
-    await login(team.id, password);
-    redirect(`/team/${team.id}/user/${user.id}`);
-}
-
->>>>>>> main
