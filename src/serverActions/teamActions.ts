@@ -39,17 +39,12 @@ export async function loginAction(
     formData: FormData
 ): Promise<LoginState> {
     const teamName = formData.get("loginTeamName") as string;
-    const username = formData.get("loginUserName") as string;
     const password = formData.get("loginPassword") as string;
 
     console.log(`Trying to login to team: ${teamName}`);
     const team = await selectTeamByName(teamName);
     if (team == null) {
       return { error: "Invalid password or team name" };
-    }
-    const user = await getUserByNameAndTeamId(username, team.id);
-    if (user == null) {
-        return { error: "Invalid password or team name" };
     }
 
     try {
@@ -59,7 +54,7 @@ export async function loginAction(
             error: error instanceof Error ? error.message : 'An error occurred' 
         };
     }
-    redirect(`/team/${team.id}/user/${user.id}`);
+    redirect(`/team/${team.id}`);
 }
 
 export async function acceptResult(winner:User,teamId:number){

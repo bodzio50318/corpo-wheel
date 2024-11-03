@@ -1,5 +1,8 @@
 #Corpo wheel
 
+#Bug :
+- when logging into team for existing user it crashes
+
 ##TO DO
 -split login to team from user log in
 -make the welocme page and the whole team creation nice 

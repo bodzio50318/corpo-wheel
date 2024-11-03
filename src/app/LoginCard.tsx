@@ -40,17 +40,6 @@ export function LoginCard() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="loginUserName">User Name</Label>
-            <Input
-              id="loginUserName"
-              name="loginUserName"
-              placeholder="Enter your user name"
-              value={loginUserName}
-              onChange={(e) => setLoginUserName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
             <Label htmlFor="loginPassword">Password</Label>
             <Input
               id="loginPassword"

@@ -54,7 +54,7 @@ export default function UserSelectionCard({ team, users }: { team: Team, users: 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="user">User</Label>
-            {users.length > 0 ? (
+            {Array.isArray(users) && users.length > 0 ? (
               <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -64,7 +64,7 @@ export default function UserSelectionCard({ team, users }: { team: Team, users: 
                     className="w-full justify-between"
                     id="user"
                   >
-                    {selectedUser?.name || "Select user..."}
+                    {selectedUser?.name ?? "Select user..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>

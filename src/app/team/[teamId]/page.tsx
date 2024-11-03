@@ -1,11 +1,11 @@
 import { getAllUsersByTeamId } from "~/db/dataAcces/userCrud";
-import UserSelectionCard from "./TeamLogin";
+import UserSelectionCard from "./UserSelection";
 import { selectTeamById } from "~/db/dataAcces/teamCrud";
 
 
 
 
-export default async function HomePage({ params }: { params: { teamId: number } }) {
+export default async function TeamPage({ params }: { params: { teamId: number } }) {
     const team = await selectTeamById(params.teamId)
 
     if(!team){
