@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { createTeam, selectTeamByName } from "~/db/dataAcces/teamCrud";
-import { addUser, getAllUsersByTeamId, getUserByIdAndTeamId, updateUserChance } from "~/db/dataAcces/userCrud";
+import { addUser, getAllUsersByTeamId, getUserByIdAndTeamId, getUserByNameAndTeamId, updateUser, updateUserChance, updateUserVote } from "~/db/dataAcces/userCrud";
 import { login } from './authActions';
 import { Team, user, User } from '~/db/schema';
 import { revalidatePath } from 'next/cache';
@@ -49,7 +49,7 @@ export async function loginAction(
     if (team == null) {
       return { error: "Invalid password or team name" };
     }
-    const user = await getUserByIdAndTeamId(username, team.id);
+    const user = await getUserByNameAndTeamId(username, team.id);
     if (user == null) {
         return { error: "Invalid password or team name" };
     }
@@ -79,8 +79,15 @@ export async function acceptResult(winner:User,teamId:number){
     const remainingChance = 357
 
     for (const user of otherUsers) {
-        const normalizedChance = Math.round((user.chance / totalChance) * remainingChance);
-        await updateUserChance(user.id, normalizedChance);
+
+        let baseChance = user.chance
+        if(user.hasVoted){
+            baseChance*=2
+        }
+        const normalizedChance = Math.round((baseChance/ totalChance) * remainingChance);
+        user.chance=normalizedChance
+        user.hasVoted=false
+        await updateUser(user.id,user)
     }
 
     //rerender the page
@@ -92,15 +99,18 @@ export async function generateWinner(teamId: number,user:User): Promise<User> {
     if (!users || users.length < 2) {
         throw new Error("Not enough users to generate winner")
     }
-    const totalChance = users.reduce((sum, item) => sum + item.chance, 0);
+
+    const eligableUsers = users.filter(user => !user.hasVoted)
+
+    const totalChance = eligableUsers.reduce((sum, item) => sum + item.chance, 0);
     
     const randomValue = Math.random() * totalChance;
     let accumulatedChance = 0;
     let winningSlice: User | null = null;
 
-    for (const user of users) {
+    for (const user of eligableUsers) {
         accumulatedChance += user.chance;
-        if (randomValue < accumulatedChance) {
+        if (randomValue < accumulatedChance ) {
             winningSlice = user;
             break;
         }
@@ -132,4 +142,15 @@ export async function addUserToTeam(teamId: number, userName: string) {
     const color = COLORS[users.length%COLORS.length]!
     revalidatePath(`/team/${teamId}`)
     return await addUser(teamId, userName,initialChnace,color)
+}
+
+export async function handleVote(user:User) {
+    const dbUser = await getUserByIdAndTeamId(user.id,user.teamId)
+
+    if(!dbUser){
+        throw new Error("User not found!")
+    }
+    dbUser.hasVoted=!dbUser.hasVoted
+    await updateUser(dbUser.id,dbUser)
+    revalidatePath(`/team/${user.teamId}`)
 }

@@ -17,12 +17,6 @@ export default function TopNav() {
               <Button variant="ghost" asChild>
                 <Link href="/">Home</Link>
               </Button>
-              <Button variant="ghost" asChild>
-                <Link href="/about">About</Link>
-              </Button>
-              <Button variant="ghost" asChild>
-                <Link href="/contact">Contact</Link>
-              </Button>
             </div>
           </div>
         </div>
