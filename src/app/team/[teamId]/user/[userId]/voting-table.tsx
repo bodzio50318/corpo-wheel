@@ -1,14 +1,15 @@
 "use client"
 
 import { Badge, Check, Edit2, Trash2 ,UserPlus } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Button } from "~/components/ui/button"
 import { Card, CardContent } from '~/components/ui/card'
 import { Input } from "~/components/ui/input"
 import { User } from '~/db/schema'
 import { TeamPageProps } from './page'
-import { addUserToTeam, deleteUser, updateUserName, updateUserVote } from '~/db/dataAcces/userCrud'
+import { deleteUser, updateUserName, updateUserVote } from '~/db/dataAcces/userCrud'
 import { useRouter } from 'next/navigation';
+import { addUserToTeam } from '~/serverActions/teamActions'
 
 export default function UserVotingTable({ teamId, users, myUser }: TeamPageProps) {
     const router = useRouter();  
@@ -17,6 +18,7 @@ export default function UserVotingTable({ teamId, users, myUser }: TeamPageProps
     const [editingUserId, setEditingUserId] = useState<number | null>(null)
     const [editingName, setEditingName] = useState("")
     const [isAddingUser, setIsAddingUser] = useState(false)
+    const [isProcessing, setIsProcessing] = useState(false)
 
     const handleVoteSubmit = async (userId: number) => {
       if (currentVote !== null) {
@@ -58,15 +60,23 @@ export default function UserVotingTable({ teamId, users, myUser }: TeamPageProps
       setEditingName(currentName)
     }
 
-    const handleAddUser = async () => {
-      if (editingName.trim()) {
-        const newUser = await addUserToTeam(teamId, editingName.trim())
-        setUsers(prevUsers => [...prevUsers, newUser])
-        setIsAddingUser(false)
-        setEditingName("")
-        router.refresh();
+    const handleAddUser = useCallback(async () => {
+      if (isProcessing || !editingName.trim()) return;
+      
+      try {
+        setIsProcessing(true);
+        const newUser = await addUserToTeam(teamId, editingName.trim());
+        
+        setUsers(prevUsers => [...prevUsers, newUser]);
+        setIsAddingUser(false);
+        setEditingName("");
+        
+      } catch (error) {
+        console.error('Error adding user:', error);
+      } finally {
+        setIsProcessing(false);
       }
-    }
+    }, [teamId, editingName, isProcessing, router]);
 
     return (
       <div className="w-full max-w-4xl mx-auto p-4">

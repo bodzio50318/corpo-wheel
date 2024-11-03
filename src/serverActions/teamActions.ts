@@ -2,10 +2,19 @@
 
 import { redirect } from 'next/navigation';
 import { createTeam, selectTeamByName } from "~/db/dataAcces/teamCrud";
-import { addUserToTeam, getAllUsersByTeamId, getUserByIdAndTeamId, updateUserChance } from "~/db/dataAcces/userCrud";
+import { addUser, getAllUsersByTeamId, getUserByIdAndTeamId, updateUserChance } from "~/db/dataAcces/userCrud";
 import { login } from './authActions';
 import { Team, user, User } from '~/db/schema';
 import { revalidatePath } from 'next/cache';
+import { sendWinnderSelectedMsg } from './pusherAction';
+
+const COLORS = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A',
+    '#98D8C8', '#F06292', '#AED581', '#7986CB',
+    '#FFD700', '#FF4500', '#8A2BE2', '#00CED1',
+    '#FF1493', '#7FFF00', '#DC143C', '#00FA9A',
+    '#FF6347', '#4682B4'
+];
 
 export async function createRoomAction(param: FormData) {
     const teamName = param.get("teamName") as string;
@@ -78,5 +87,49 @@ export async function acceptResult(winner:User,teamId:number){
     revalidatePath(`/team/${teamId}`)
 }
 
+export async function generateWinner(teamId: number,user:User): Promise<User> {
+    const users = await getAllUsersByTeamId(teamId);
+    if (!users || users.length < 2) {
+        throw new Error("Not enough users to generate winner")
+    }
+    const totalChance = users.reduce((sum, item) => sum + item.chance, 0);
+    
+    const randomValue = Math.random() * totalChance;
+    let accumulatedChance = 0;
+    let winningSlice: User | null = null;
+
+    for (const user of users) {
+        accumulatedChance += user.chance;
+        if (randomValue < accumulatedChance) {
+            winningSlice = user;
+            break;
+        }
+    }
+    
+    if (!winningSlice){
+        throw new Error("Failed selecting winner")
+    }
+
+    await sendWinnderSelectedMsg(winningSlice.id, user, teamId)
+
+    return winningSlice
+}
 
 
+export async function addUserToTeam(teamId: number, userName: string) {
+    const users = await getAllUsersByTeamId(teamId)
+    
+    if(!users){
+        throw new Error("Users not found!")
+    }
+    let initialChnace = 0
+    if(users.length === 0){
+        initialChnace = 360
+    }else{
+        initialChnace = Math.ceil(users?.reduce((sum,user)=> sum+user.chance,0)/users.length)
+    }
+
+    const color = COLORS[users.length%COLORS.length]!
+    revalidatePath(`/team/${teamId}`)
+    return await addUser(teamId, userName,initialChnace,color)
+}

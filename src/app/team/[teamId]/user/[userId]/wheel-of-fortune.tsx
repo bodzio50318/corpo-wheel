@@ -7,11 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { team, type User } from '~/db/schema';
 import { pusherClient } from '~/libs/client';
 import { NewUserJoinedPusherMessage, sendNewUserJoinedMsg, type WinnerSelectedPusherMessage } from '~/serverActions/pusherAction';
-import { generateWinner } from '~/serverActions/wheelActions';
 import { LonelyLoserBanner } from './lonelny-banner';
 import { TeamPageProps } from './page';
 import WinnerPopup from './winnerPopup';
-import { acceptResult } from '~/serverActions/teamActions';
+import { acceptResult, generateWinner } from '~/serverActions/teamActions';
 
 
 export const NEW_WINNER_TOPIC = `new-winner-`;

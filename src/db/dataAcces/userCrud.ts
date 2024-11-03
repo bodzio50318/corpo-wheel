@@ -8,30 +8,8 @@ export async function getAllUsersByTeamId(teamId: number): Promise<User[] | unde
     return users;
 }
 
-const COLORS = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A',
-    '#98D8C8', '#F06292', '#AED581', '#7986CB',
-    '#FFD700', '#FF4500', '#8A2BE2', '#00CED1',
-    '#FF1493', '#7FFF00', '#DC143C', '#00FA9A',
-    '#FF6347', '#4682B4'
-];
-
-export async function addUserToTeam(teamId: number, userName: string): Promise<User> {
-    const users = await getAllUsersByTeamId(teamId)
-    
-    if(!users){
-        throw new Error("Users not found!")
-    }
-    let initialChnace = 0
-    if(users.length === 0){
-        initialChnace = 360
-    }else{
-        initialChnace = Math.ceil(users?.reduce((sum,user)=> sum+user.chance,0)/users.length)
-    }
-
-    const color = COLORS[users.length%COLORS.length]!
-
-    const result = await db.insert(user).values({ teamId: teamId,chance:initialChnace, name: userName,color:color }).returning();
+export async function addUser(teamId: number, userName: string,chance:number,color:string): Promise<User> {
+    const result = await db.insert(user).values({ teamId: teamId,chance:chance, name: userName,color:color }).returning();
     if (result[0] == null) {
         throw new Error("Error while adding user to team")
     }

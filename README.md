@@ -1,9 +1,5 @@
 #Corpo wheel
 
-
-##
-Bug: clining add user creaets 2 istead of 1
-
 ##TO DO
 -make the voting work
 -split login to team from user log in
