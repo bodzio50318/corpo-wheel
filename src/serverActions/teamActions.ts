@@ -18,17 +18,15 @@ const COLORS = [
 
 export async function createRoomAction(param: FormData) {
     const teamName = param.get("teamName") as string;
-    const username = param.get("userName") as string;
     const password = param.get("password") as string;
 
     
     console.log(`Creating a new team: ${teamName}`);
     const team = await createTeam(teamName, password);
     console.log(`New team id: ${team.id}`);
-    const userId = (await addUserToTeam(team.id, username)).id;
-
+   
     await login(team.id, password);
-    redirect(`/team/${team.id}/user/${userId}`);
+    redirect(`/team/${team.id}`);
 }
 
 // Define the return type for the action
